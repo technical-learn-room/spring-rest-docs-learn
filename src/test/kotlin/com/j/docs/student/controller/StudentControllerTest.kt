@@ -4,13 +4,15 @@ import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper.document
 import com.epages.restdocs.apispec.ResourceDocumentation
 import com.epages.restdocs.apispec.ResourceSnippetParameters
 import com.epages.restdocs.apispec.SimpleType
+import com.j.docs.common.createRequest
 import com.j.docs.common.response.CommonResponse
-import com.j.docs.student.common.createRequest
-import com.j.docs.student.common.toObject
+import com.j.docs.common.toObject
 import com.j.docs.student.controller.request.StudentCreationRequest
 import com.j.docs.student.service.StudentCreationService
 import com.j.docs.student.service.StudentSearchService
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.mockito.BDDMockito.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
@@ -20,7 +22,7 @@ import org.springframework.http.HttpMethod
 import org.springframework.restdocs.payload.JsonFieldType
 import org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath
 import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 
 @WebMvcTest(StudentController::class)
 @AutoConfigureRestDocs
@@ -38,23 +40,33 @@ internal class StudentControllerTest {
 
     @Test
     fun `학생 등록하기 - CREATED`() {
+        willDoNothing().given(
+            studentCreationService.create(
+                studentFirstName = "진혁",
+                studentLastName = "이",
+                studentGrade = 3,
+                studentClassroom = 4,
+                studentNumber = 17,
+            )
+        )
+
         val requestBody = StudentCreationRequest(
             student = StudentCreationRequest.StudentInfo(
-                firstName = "이",
-                lastName = "진혁",
+                firstName = "진혁",
+                lastName = "이",
                 grade = 3,
                 classroom = 4,
                 number = 17,
             )
         )
 
-        val response = mockMvc.perform(
+        val result = mockMvc.perform(
             createRequest(
                 httpMethod = HttpMethod.POST,
                 url = "/students",
                 requestBody = requestBody,
             ))
-            .andExpect(MockMvcResultMatchers.status().isCreated)
+            .andExpect(status().isCreated)
             .andDo(
                 document(
                     "학생 등록하기 - CREATED",
@@ -96,5 +108,25 @@ internal class StudentControllerTest {
             .response
             .contentAsString
             .toObject<CommonResponse<Nothing>>()
+
+//        verify(studentCreationService).create(
+//            studentFirstName = "진혁",
+//            studentLastName = "이",
+//            studentGrade = 3,
+//            studentClassroom = 4,
+//            studentNumber = 17,
+//        )
+        then(studentCreationService)
+            .should()
+            .create(
+                studentFirstName = "진혁",
+                studentLastName = "이",
+                studentGrade = 3,
+                studentClassroom = 4,
+                studentNumber = 17,
+            )
+
+        assertThat(result.errorCode).isNull()
+        assertThat(result.errorMessage).isNull()
     }
 }

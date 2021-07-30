@@ -31,7 +31,7 @@ dependencies {
     testImplementation("org.springframework.restdocs:spring-restdocs-mockmvc")
 
     // Mockito-Kotlin
-    testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
+//    testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
 
     // JUnit5...etc
     testImplementation("org.springframework.boot:spring-boot-starter-test")

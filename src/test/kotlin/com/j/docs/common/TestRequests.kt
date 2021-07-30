@@ -1,4 +1,4 @@
-package com.j.docs.student.common
+package com.j.docs.common
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
