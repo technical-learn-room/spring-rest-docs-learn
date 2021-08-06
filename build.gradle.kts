@@ -16,8 +16,6 @@ repositories {
     mavenCentral()
 }
 
-extra["snippetsDir"] = file("build/generated-snippets")
-
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-validation")
@@ -29,9 +27,11 @@ dependencies {
     // Spring Rest Docs
     testImplementation("com.epages:restdocs-api-spec-mockmvc:0.11.3")
     testImplementation("org.springframework.restdocs:spring-restdocs-mockmvc")
+    asciidoctor("org.springframework.restdocs:spring-restdocs-asciidoctor:2.0.3.RELEASE")
 
     // Mockito-Kotlin
-//    testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
+    testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0")
+    testImplementation("org.mockito:mockito-inline:2.21.0")
 
     // JUnit5...etc
     testImplementation("org.springframework.boot:spring-boot-starter-test")
@@ -48,13 +48,13 @@ tasks.withType<Test> {
     useJUnitPlatform()
 }
 
-//val snippetsDir = "./target/classes/static/docs"
-//
-//tasks.test {
-//    outputs.dir(snippetsDir)
-//}
-//
-//tasks.asciidoctor {
-//    inputs.dir(snippetsDir)
-////    dependsOn(test)
-//}
+val asciidocDirectoryPath = "build/generated-snippets"
+
+tasks.test {
+    outputs.dir(asciidocDirectoryPath)
+}
+
+tasks.asciidoctor {
+    inputs.dir(asciidocDirectoryPath)
+    dependsOn(tasks.test)
+}

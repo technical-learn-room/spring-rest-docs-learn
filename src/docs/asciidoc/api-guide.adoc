@@ -1,0 +1,10 @@
+= Student
+
+== Student 조회
+
+include::{snippets}/testA/curl-request.adoc[]
+include::{snippets}/testA/http-request.adoc[]
+include::{snippets}/testA/http-response.adoc[]
+include::{snippets}/testA/httpie-request.adoc[]
+include::{snippets}/testA/request-body.adoc[]
+include::{snippets}/testA/response-body.adoc[]
