@@ -1,19 +1,19 @@
 package com.j.docs.student.controller
 
 import com.epages.restdocs.apispec.MockMvcRestDocumentationWrapper.document
-import com.epages.restdocs.apispec.ResourceDocumentation
-import com.epages.restdocs.apispec.ResourceSnippetParameters
 import com.j.docs.common.createRequest
 import com.j.docs.common.getDocumentRequest
 import com.j.docs.common.getDocumentResponse
 import com.j.docs.common.response.CommonResponse
 import com.j.docs.common.toObject
 import com.j.docs.student.controller.response.StudentAllSearchResponse
+import com.j.docs.student.controller.response.StudentSearchResponse
 import com.j.docs.student.dto.StudentSearchDto
 import com.j.docs.student.service.StudentCreationService
 import com.j.docs.student.service.StudentSearchService
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.mockito.BDDMockito.given
+import org.mockito.BDDMockito.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
@@ -41,8 +41,8 @@ internal class StudentControllerTest {
     private lateinit var studentSearchService: StudentSearchService
 
     private val savedStudents = listOf(
-        StudentSearchDto(1, "진혁 이", "3417"),
-        StudentSearchDto(2, "진혁 리", "3517"),
+        StudentSearchDto(1, "jinhyeok lee", "3417"),
+        StudentSearchDto(2, "jinhyuk lee", "3517"),
     )
 
     @Test
@@ -58,7 +58,7 @@ internal class StudentControllerTest {
             .andExpect(status().isOk)
             .andDo(
                 document(
-                    "testA",
+                    "모든 학생 조회하기 - OK",
                     getDocumentRequest(),
                     getDocumentResponse(),
                     responseFields(
@@ -81,105 +81,79 @@ internal class StudentControllerTest {
                             .type(JsonFieldType.NULL)
                             .description("에러 메시지"),
                     ),
-                )
+                ),
             )
             .andReturn()
             .response
             .contentAsString
             .toObject<CommonResponse<StudentAllSearchResponse>>()
 
-        println("result: $result")
+        verify(studentSearchService).searchAll()
+
+        assertThat(result.errorCode).isNull()
+        assertThat(result.errorMessage).isNull()
+        assertThat(result.response).isNotNull
+        assertThat(result.response!!.students)
+            .map<Long> { it.id }
+            .contains(1, 2)
+        assertThat(result.response!!.students)
+            .map<String> { it.name }
+            .contains("jinhyeok lee", "jinhyuk lee")
+        assertThat(result.response!!.students)
+            .map<String> { it.gradeClassNumber }
+            .contains("3417", "3517")
     }
 
-//    @Test
-//    fun `학생 등록하기 - CREATED`() {
-//        willDoNothing().given(
-//            studentCreationService.create(
-//                studentFirstName = "진혁",
-//                studentLastName = "이",
-//                studentGrade = 3,
-//                studentClassroom = 4,
-//                studentNumber = 17,
-//            )
-//        )
-//
-//        val requestBody = StudentCreationRequest(
-//            student = StudentCreationRequest.StudentInfo(
-//                firstName = "진혁",
-//                lastName = "이",
-//                grade = 3,
-//                classroom = 4,
-//                number = 17,
-//            )
-//        )
-//
-//        val result = mockMvc.perform(
-//            createRequest(
-//                httpMethod = HttpMethod.POST,
-//                url = "/students",
-//                requestBody = requestBody,
-//            ))
-//            .andExpect(status().isCreated)
-//            .andDo(
-//                document(
-//                    "학생 등록하기 - CREATED",
-//                    "",
-//                    false,
-//                    ResourceDocumentation.resource(
-//                        ResourceSnippetParameters.builder()
-//                            .requestFields(
-//                                fieldWithPath("student.firstName")
-//                                    .type(SimpleType.STRING)
-//                                    .description("학생의 이름(first name)"),
-//                                fieldWithPath("student.lastName")
-//                                    .type(SimpleType.STRING)
-//                                    .description("학생의 성(last name)"),
-//                                fieldWithPath("student.grade")
-//                                    .type(SimpleType.INTEGER)
-//                                    .description("학생의 학년"),
-//                                fieldWithPath("student.classroom")
-//                                    .type(SimpleType.INTEGER)
-//                                    .description("학생의 반"),
-//                                fieldWithPath("student.number")
-//                                    .type(SimpleType.INTEGER)
-//                                    .description("학생의 번호"),
-//                            ).responseFields(
-//                                fieldWithPath("response")
-//                                    .type(JsonFieldType.NULL)
-//                                    .description("응답 데이터 없음"),
-//                                fieldWithPath("errorCode")
-//                                    .type(SimpleType.STRING)
-//                                    .description("에러 코드"),
-//                                fieldWithPath("errorMessage")
-//                                    .type(SimpleType.STRING)
-//                                    .description("에러 메시지"),
-//                            ).build()
-//                    )
-//                )
-//            )
-//            .andReturn()
-//            .response
-//            .contentAsString
-//            .toObject<CommonResponse<Nothing>>()
-//
-////        verify(studentCreationService).create(
-////            studentFirstName = "진혁",
-////            studentLastName = "이",
-////            studentGrade = 3,
-////            studentClassroom = 4,
-////            studentNumber = 17,
-////        )
-//        then(studentCreationService)
-//            .should()
-//            .create(
-//                studentFirstName = "진혁",
-//                studentLastName = "이",
-//                studentGrade = 3,
-//                studentClassroom = 4,
-//                studentNumber = 17,
-//            )
-//
-//        assertThat(result.errorCode).isNull()
-//        assertThat(result.errorMessage).isNull()
-//    }
+    @Test
+    fun `특정 학생 조회하기 - OK`() {
+        willDoNothing()
+            .given(studentSearchService)
+            .search(anyLong())
+
+        val result = mockMvc.perform(
+            createRequest<Nothing>(
+                httpMethod = HttpMethod.GET,
+                url = "/students/{studentId}",
+                pathVariables = listOf(1),
+            ))
+            .andExpect(status().isOk)
+            .andDo(
+                document(
+                    "특정 학생 조회하기 - OK",
+                    getDocumentRequest(),
+                    getDocumentResponse(),
+                    responseFields(
+                        fieldWithPath("response.student.id")
+                            .type(JsonFieldType.ARRAY)
+                            .description("학생 아이디"),
+                        fieldWithPath("response.student.name")
+                            .type(JsonFieldType.ARRAY)
+                            .description("학생 이름"),
+                        fieldWithPath("response.student.gradeClassNumber")
+                            .type(JsonFieldType.ARRAY)
+                            .description("학생 학년-반-번호"),
+                        fieldWithPath("errorCode")
+                            .type(JsonFieldType.NULL)
+                            .description("에러 코드"),
+                        fieldWithPath("errorMessage")
+                            .type(JsonFieldType.NULL)
+                            .description("에러 메시지"),
+                    ),
+                ),
+            )
+            .andReturn()
+            .response
+            .contentAsString
+            .toObject<CommonResponse<StudentSearchResponse>>()
+
+        verify(studentSearchService).search(anyLong())
+
+        assertThat(result.errorCode).isNull()
+        assertThat(result.errorMessage).isNull()
+        assertThat(result.response).isNotNull
+        assertThat(result.response!!.student).isNotNull
+        assertThat(result.response!!.student.id).isEqualTo(1)
+        assertThat(result.response!!.student.name).isEqualTo("jinhyeok lee")
+        assertThat(result.response!!.student.gradeClassNumber).isEqualTo("3417")
+    }
 }

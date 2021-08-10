@@ -15,9 +15,10 @@ fun <T> createRequest(
     httpMethod: HttpMethod,
     url: String,
     requestBody: T? = null,
-    vararg queryParams: Pair<String, Any>,
+    queryParams: List<Pair<String, Any>> = listOf(),
+    pathVariables: List<Any> = listOf(),
 ): MockHttpServletRequestBuilder =
-    RestDocumentationRequestBuilders.request(httpMethod, url)
+    RestDocumentationRequestBuilders.request(httpMethod, url, pathVariables)
         .accept(MediaType.APPLICATION_JSON)
         .contentType(MediaType.APPLICATION_JSON)
         .characterEncoding("UTF-8")

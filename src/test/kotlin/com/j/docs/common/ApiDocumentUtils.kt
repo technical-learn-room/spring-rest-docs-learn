@@ -1,8 +1,10 @@
 package com.j.docs.common
 
+import org.springframework.restdocs.operation.preprocess.OperationRequestPreprocessor
+import org.springframework.restdocs.operation.preprocess.OperationResponsePreprocessor
 import org.springframework.restdocs.operation.preprocess.Preprocessors.*
 
-fun getDocumentRequest() =
+fun getDocumentRequest(): OperationRequestPreprocessor =
     preprocessRequest(
         modifyUris()
             .scheme("http")
@@ -11,4 +13,5 @@ fun getDocumentRequest() =
         prettyPrint(),
     )
 
-fun getDocumentResponse() = preprocessResponse(prettyPrint())
+fun getDocumentResponse(): OperationResponsePreprocessor =
+    preprocessResponse(prettyPrint())
