@@ -16,9 +16,12 @@ fun <T> createRequest(
     url: String,
     requestBody: T? = null,
     queryParams: List<Pair<String, Any>> = listOf(),
-    pathVariables: List<Any> = listOf(),
+    pathVariables: List<Pair<String, Any>> = listOf(),
 ): MockHttpServletRequestBuilder =
-    RestDocumentationRequestBuilders.request(httpMethod, url, pathVariables)
+    RestDocumentationRequestBuilders.request(
+        httpMethod,
+        applyPathVariable(url, pathVariables),
+        pathVariables)
         .accept(MediaType.APPLICATION_JSON)
         .contentType(MediaType.APPLICATION_JSON)
         .characterEncoding("UTF-8")
@@ -29,5 +32,17 @@ fun <T> createRequest(
             }
         })
 
+private fun applyPathVariable(url: String, pathVariables: List<Pair<String, Any>>): String {
+    var urlWithPathVariableApplied = url
+    pathVariables.forEach { (path, pathVariable) ->
+        urlWithPathVariableApplied =
+            urlWithPathVariableApplied.replace("{$path}", pathVariable.toString())
+    }
+    return urlWithPathVariableApplied
+}
+
 inline fun <reified T> String.toObject() =
     ObjectMapper().findAndRegisterModules().readValue<T>(this)
+
+fun Any.toJson() =
+    ObjectMapper().writeValueAsString(this)
